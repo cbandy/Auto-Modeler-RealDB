@@ -38,7 +38,7 @@ class AutoModeler extends Model implements ArrayAccess, Iterator
 		if ($id != NULL)
 		{
 			// try and get a row with this ID
-			$data = db::select('*')->from($this->_table_name)->where('id', '=', $id)->execute($this->_db);
+			$data = $this->_db->select(array('*'))->from($this->_table_name)->where('id', '=', $id)->execute($this->_db);
 
 			// try and assign the data
 			if (count($data) == 1 AND $data = $data->current())
@@ -208,12 +208,12 @@ class AutoModeler extends Model implements ArrayAccess, Iterator
 		{
 			if ($this->_data['id']) // Do an update
 			{
-				return count(db::update($this->_table_name)->set(array_diff_assoc($this->_data, array('id' => $this->_data['id'])))->where('id', '=', $this->_data['id'])->execute($this->_db));
+				return $this->_db->update($this->_table_name)->set(array_diff_assoc($this->_data, array('id' => $this->_data['id'])))->where('id', '=', $this->_data['id'])->execute($this->_db);
 			}
 			else // Do an insert
 			{
-				$id = db::insert($this->_table_name)->values($this->_data)->execute($this->_db);
-				return ($this->_data['id'] = $id[0]);
+				$id = $this->_db->insert($this->_table_name)->values($this->_data)->execute($this->_db);
+				return ($this->_data['id'] = $id[1]);
 			}
 		}
 
@@ -223,13 +223,13 @@ class AutoModeler extends Model implements ArrayAccess, Iterator
 	/**
 	 * Deletes the current object from the database
 	 *
-	 * @return array
+	 * @return integer
 	 */
 	public function delete()
 	{
 		if ($this->_data['id'])
 		{
-			return db::delete($this->_table_name, array(array('id', '=', $this->_data['id'])))->execute($this->_db);
+			return $this->_db->delete($this->_table_name)->where('id', '=', $this->_data['id'])->execute($this->_db);
 		}
 	}
 
@@ -243,28 +243,32 @@ class AutoModeler extends Model implements ArrayAccess, Iterator
 	 */
 	public function fetch_all($order_by = 'id', $direction = 'ASC')
 	{
-		return db::select('*')->from($this->_table_name)->order_by($order_by, $direction)->as_object('Model_'.inflector::singular(ucwords($this->_table_name)))->execute($this->_db);
+		return $this->_db->select(array('*'))->from($this->_table_name)->order_by($order_by, $direction)->as_object('Model_'.inflector::singular(ucwords($this->_table_name)))->execute($this->_db);
 	}
 
 	/**
 	 * Same as fetch_all except you can pass a where clause
 	 *
-	 * @param array  $where     the where clause
+	 * @param mixed  $where     the where clause
 	 * @param string $order_by  a column to order on
 	 * @param string $direction the direction to sort
 	 * @param string $type      the type of where to run
 	 *
 	 * @return Database_Result
 	 */
-	public function fetch_where($wheres = array(), $order_by = 'id', $direction = 'ASC', $type = 'and')
+	public function fetch_where($where = NULL, $order_by = 'id', $direction = 'ASC', $type = 'and')
 	{
-		$function = $type.'_where';
-		$query = db::select('*')->from($this->_table_name)->order_by($order_by, $direction)->as_object('Model_'.inflector::singular(ucwords($
+		if ($where AND is_array($where))
+		{
+			$conditions = new Database_Conditions;
 
-		foreach ($wheres as $where)
-			$query->$function($where[0], $where[1], $where[2]);
+			foreach ($where as $cond)
+				$conditions->add_column($type, $cond[0], $cond[1], $cond[2]);
 
-		return $query->execute($this->_db);
+			$where = $conditions;
+		}
+
+		return $this->_db->select(array('*'))->from($this->_table_name)->order_by($order_by, $direction)->as_object('Model_'.inflector::singular(ucwords($this->_table_name)))->where($where)->execute($this->_db);
 	}
 
 	/**
@@ -273,19 +277,17 @@ class AutoModeler extends Model implements ArrayAccess, Iterator
 	 * @param array  $key       the key to use for the array
 	 * @param array  $where     the value to use for the display
 	 * @param string $order_by  a column to order on
-	 * @param array  $where     the where clause
+	 * @param mixed  $where     the where clause
 	 *
 	 * @return Database_Result
 	 */
-	public function select_list($key, $display, $order_by = 'id', $where = array())
+	public function select_list($key, $display, $order_by = 'id', $where = NULL)
 	{
 		$rows = array();
 
-		$query = empty($where) ? $this->fetch_all($order_by) : $this->fetch_where($where, $order_by);
-
 		$array_display = is_array($display);
 
-		foreach ($query as $row)
+		foreach ($this->fetch_where($where, $order_by) as $row)
 		{
 			if ($array_display)
 			{
