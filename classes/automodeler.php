@@ -212,7 +212,7 @@ class AutoModeler extends Model implements ArrayAccess, Iterator
 			}
 			else // Do an insert
 			{
-				$id = $this->_db->insert($this->_table_name)->values($this->_data)->execute($this->_db);
+				$id = $this->_db->insert($this->_table_name)->values($this->_data)->identity('id')->execute($this->_db);
 				return ($this->_data['id'] = $id[1]);
 			}
 		}
