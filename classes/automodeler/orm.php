@@ -109,7 +109,7 @@ class AutoModeler_ORM extends AutoModeler
 		$model = 'Model_'.inflector::singular($key);
 
 		$temp = new $model();
-		if ($temp->has_attribute(inflector::singular($this->_table_name).'_id')) // Look for a one to many relationship
+		if (isset($temp->{inflector::singular($this->_table_name).'_id'})) // Look for a one to many relationship
 		{
 			$query = $this->_db->select(array('*'))->from($key)->order_by($order_by, $order)->where(inflector::singular($this->_table_name).'_id', '=', $this->_data['id']);
 		}
