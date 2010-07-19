@@ -141,7 +141,7 @@ class AutoModeler_ORM extends AutoModeler
 	 */
 	public function find_parent($key, $where = array(), $order_by = 'id', $order = 'ASC')
 	{
-		if ($this->has_attribute($key.'_id')) // Look for a one to many relationship
+		if (isset($this->{$key.'_id'})) // Look for a one to many relationship
 		{
 			$query = db::select()->from(inflector::plural($this->_table_name));
 			$query->where('id', '=', $this->_data[$key.'_id']);
