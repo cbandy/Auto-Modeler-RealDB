@@ -272,7 +272,7 @@ class AutoModeler extends Model implements ArrayAccess, Iterator
 			$conditions = new Database_Conditions;
 
 			foreach ($where as $cond)
-				$conditions->add_column($type, $cond[0], $cond[1], $cond[2]);
+				$conditions->column($type, $cond[0], $cond[1], $cond[2]);
 
 			$where = $conditions;
 		}
