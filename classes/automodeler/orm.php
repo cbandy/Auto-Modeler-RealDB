@@ -24,10 +24,9 @@ class AutoModeler_ORM extends AutoModeler
 	{
 		// See if we are requesting a foreign key
 		if (isset($this->_data[$key.'_id']))
-			// Get the row from the foreign table
-			return db::select('*')->from(inflector::plural($key))->where('id', '=', $this->_data[$key.'_id'])->as_object('Model_'.inflector::singular(ucwords($key)))->execute($this->_db)->current();
-		else if (isset($this->_data[$key]))
-			return $this->_data[$key];
+			return AutoModeler::factory($key, $this->_data[$key.'_id']);
+
+		return parent::__get($key);
 	}
 
 	/**
