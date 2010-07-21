@@ -178,7 +178,12 @@ class AutoModeler_ORM extends AutoModeler
 
 		if (in_array($key, $this->_has_many))
 		{
-			return (bool) db::select($key.'.id')->from($key)->where($join_table.'.'.$this_key, '=', $this->_data['id'])->where($join_table.'.'.$f_key, '=', $value)->join($join_table)->on($join_table.'.'.$f_key, '=', $key.'.id')->execute($this->_db)->count();
+			return (bool) db::select($key.'.id')->
+			                  from($key)->
+			                  where($join_table.'.'.$this_key, '=', $this->_data['id'])->
+			                  where($join_table.'.'.$f_key, '=', $value)->
+			                  join($join_table)->on($join_table.'.'.$f_key, '=', $key.'.id')->
+			                  execute($this->_db)->count();
 		}
 		return FALSE;
 	}
